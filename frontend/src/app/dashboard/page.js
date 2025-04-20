@@ -1,0 +1,41 @@
+'use client'
+
+import { useEffect, useState } from "react"
+import SearchBar from "@/components/SearchBar"
+import MemoryCard from "@/components/MemoryCard"
+import VisualPreview from "@/components/VisualPreview"
+import { searchMemory } from "@/lib/api"
+
+export default function DashboardPage() {
+  const [query, setQuery] = useState("")
+  const [results, setResults] = useState([])
+
+  const handleSearch = async () => {
+    if (!query) return
+    try {
+      const res = await searchMemory(query)
+      setResults(res)
+    } catch (err) {
+      console.error("Search error:", err)
+    }
+  }
+
+  useEffect(() => {
+    if (query.length > 0) handleSearch()
+  }, [query])
+
+  return (
+    <main className="min-h-screen px-4 py-10 md:px-10 bg-white dark:bg-black text-black dark:text-white">
+      <h1 className="text-3xl font-bold mb-4">🔍 Search Your Memory</h1>
+      <SearchBar query={query} setQuery={setQuery} onSearch={handleSearch} />
+      <div className="my-8">
+        <VisualPreview results={results} />
+      </div>
+      <div className="space-y-6">
+        {results.map((entry, i) => (
+          <MemoryCard key={i} entry={entry} />
+        ))}
+      </div>
+    </main>
+  )
+}
