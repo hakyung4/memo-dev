@@ -15,7 +15,7 @@ def add_memory(entry: MemoryEntry):
 @router.post("/search", response_model=list[MemoryEntry])
 def search_memory_route(query: MemoryQuery):
     try:
-        results = search_memory(query.query)
+        results = search_memory(query.query, query.user_id)
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error searching memory: {str(e)}")

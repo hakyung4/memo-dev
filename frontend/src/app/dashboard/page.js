@@ -1,28 +1,48 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from "react"
-import SearchBar from "@/components/SearchBar"
-import MemoryCard from "@/components/MemoryCard"
-import VisualPreview from "@/components/VisualPreview"
-import { searchMemory } from "@/lib/api"
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabaseClient';
+
+import SearchBar from '@/components/SearchBar';
+import MemoryCard from '@/components/MemoryCard';
+import VisualPreview from '@/components/VisualPreview';
+import { searchMemory } from '@/lib/api';
 
 export default function DashboardPage() {
-  const [query, setQuery] = useState("")
-  const [results, setResults] = useState([])
-
-  const handleSearch = async () => {
-    if (!query) return
-    try {
-      const res = await searchMemory(query)
-      setResults(res)
-    } catch (err) {
-      console.error("Search error:", err)
-    }
-  }
+  const router = useRouter();
+  const [session, setSession] = useState(null);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
 
   useEffect(() => {
-    if (query.length > 0) handleSearch()
-  }, [query])
+    const fetchSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        router.push('/auth');
+      } else {
+        setSession(data.session);
+      }
+    };
+
+    fetchSession();
+  }, []);
+
+  const handleSearch = async () => {
+    if (!query) return;
+    try {
+      const res = await searchMemory(query);
+      setResults(res);
+    } catch (err) {
+      console.error('Search error:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (query.length > 0) handleSearch();
+  }, [query]);
+
+  if (!session) return null;
 
   return (
     <main className="min-h-screen px-4 py-10 md:px-10 bg-white dark:bg-black text-black dark:text-white">
@@ -37,5 +57,5 @@ export default function DashboardPage() {
         ))}
       </div>
     </main>
-  )
+  );
 }
