@@ -6,7 +6,7 @@ export default function MemoryCard({ entry }) {
         <div className="text-gray-600 text-xs">
           📁 {entry.project} / {entry.filename}
         </div>
-        <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto max-h-48">
+        <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto max-h-48 dark:text-black">
           {entry.text}
         </pre>
         <div className="text-gray-400 text-xs">

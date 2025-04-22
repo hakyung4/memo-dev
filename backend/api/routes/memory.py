@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from backend.schemas import MemoryEntry, MemoryQuery, MemoryResponse
-from backend.services.memory import store_memory, search_memory
+from backend.schemas import MemoryEntry, MemoryQuery, MemoryResponse, ChatSaveRequest
+from backend.services.memory import store_memory, search_memory, store_chat_memory
 
 router = APIRouter()
 
@@ -39,3 +39,11 @@ def search_memory_route(query: MemoryQuery):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error searching memory: {str(e)}")
+
+@router.post("/save-chat", response_model=MemoryResponse)
+def save_chat(entry: ChatSaveRequest):
+    try:
+        memory_id = store_chat_memory(entry)
+        return MemoryResponse(success=True, message=f"Chat Q&A saved with ID: {memory_id}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving chat Q&A: {str(e)}")

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.api.routes import memory
+from backend.api.routes import memory, chat
 
 app = FastAPI(
     title="Memo.dev API",
@@ -17,3 +17,4 @@ app.add_middleware(
 )
 
 app.include_router(memory.router, prefix="/api/memory", tags=["Memory"])
+app.include_router(chat.router, prefix="/api/gpt")

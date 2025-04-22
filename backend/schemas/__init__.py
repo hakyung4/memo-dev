@@ -18,3 +18,11 @@ class MemoryQuery(BaseModel):
 class MemoryResponse(BaseModel):
     success: bool
     message: str
+
+class ChatSaveRequest(BaseModel):
+    user_id: str
+    prompt: str
+    response: str
+    project: Optional[str] = None
+    filename: Optional[str] = None
+    fixed_by_ai: Optional[bool] = True

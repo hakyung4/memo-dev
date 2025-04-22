@@ -1,45 +1,9 @@
 from backend.services.embedding import get_embedding
 from backend.db.pinecone_db import upsert_memory, query_similar_memories
-from backend.schemas import MemoryEntry
+from backend.schemas import MemoryEntry, ChatSaveRequest
 from backend.db.pg import insert_memory_to_db, fetch_memories_by_ids
 from datetime import datetime
 import uuid
-
-# def store_memory(entry: MemoryEntry):
-#     try:
-#         embedding = get_embedding(entry.text)
-
-#         # Set timestamp if not set
-#         timestamp = entry.timestamp or datetime.utcnow()
-#         memory_id = entry.id or str(uuid.uuid4())
-
-#         metadata = {
-#             "id": memory_id,
-#             "user_id": str(entry.user_id),
-#             "project": entry.project,
-#             "filename": entry.filename,
-#             "text": entry.text,
-#             "timestamp": timestamp.isoformat(),
-#             "fixed_by_ai": entry.fixed_by_ai,
-#         }
-
-#         # Save to Pinecone
-#         upsert_memory(embedding, metadata)
-
-#         # Save to PostgreSQL
-#         insert_memory_to_db(
-#             memory_id,
-#             entry.user_id,
-#             entry.project,
-#             entry.filename,
-#             entry.text,
-#             timestamp,
-#             entry.fixed_by_ai
-#         )
-
-#         return memory_id
-#     except Exception as e:
-#         raise RuntimeError(f"store_memory failed: {str(e)}")
     
 def store_memory(entry: MemoryEntry):
     try:
@@ -104,4 +68,19 @@ def search_memory(query: str, user_id: str):
         return fetch_memories_by_ids(user_id, matching_ids)
     except Exception as e:
         raise RuntimeError(f"search_memory failed: {str(e)}")
+
+def store_chat_memory(entry: ChatSaveRequest):
+    try:
+        full_text = f"Q: {entry.prompt}\n\n---\n\nA: {entry.response}"
+
+        memory = MemoryEntry(
+            user_id=entry.user_id,
+            project=entry.project or "",       # ✅ convert null → ""
+            filename=entry.filename or "",     # ✅ convert null → ""
+            text=full_text,
+            fixed_by_ai=entry.fixed_by_ai or False,
+        )
+        return store_memory(memory)
+    except Exception as e:
+        raise RuntimeError(f"store_chat_memory failed: {str(e)}")
 
