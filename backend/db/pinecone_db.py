@@ -20,10 +20,19 @@ index = pc.Index(index_name)
 
 def upsert_memory(embedding: list[float], metadata: dict):
     try:
-        vector_id = str(uuid.uuid4())
+        if "id" not in metadata:
+            raise ValueError("Missing 'id' in metadata for Pinecone upsert")
+
+        vector_id = metadata["id"]  # ✅ DO NOT generate a new one
+
         index.upsert([
-            {"id": vector_id, "values": embedding, "metadata": metadata}
+            {
+                "id": vector_id,
+                "values": embedding,
+                "metadata": metadata
+            }
         ])
+
         return vector_id
     except Exception as e:
         raise RuntimeError(f"upsert_memory failed: {str(e)}")

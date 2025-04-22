@@ -29,9 +29,9 @@ export default function DashboardPage() {
   }, []);
 
   const handleSearch = async () => {
-    if (!query) return;
+    if (!query || !session?.user?.id) return;
     try {
-      const res = await searchMemory(query);
+      const res = await searchMemory(query, session.user.id);
       setResults(res);
     } catch (err) {
       console.error('Search error:', err);
@@ -39,7 +39,7 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    if (query.length > 0) handleSearch();
+    if (query.length > 0 && session?.user?.id) handleSearch();
   }, [query]);
 
   if (!session) return null;
