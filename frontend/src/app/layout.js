@@ -8,8 +8,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className="bg-white text-black dark:bg-black dark:text-white transition-colors duration-300">
+    <html lang="en" className="h-full">
+      <body className="min-h-screen bg-white text-black dark:bg-black dark:text-white transition-colors duration-300">
         <Navbar />
         {children}
       </body>

@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Path
 from backend.schemas import MemoryEntry, MemoryQuery, MemoryResponse, ChatSaveRequest
-from backend.services.memory import store_memory, search_memory, store_chat_memory
+from backend.services.memory import store_memory, search_memory, store_chat_memory, delete_memory
 
 router = APIRouter()
 
@@ -47,3 +47,11 @@ def save_chat(entry: ChatSaveRequest):
         return MemoryResponse(success=True, message=f"Chat Q&A saved with ID: {memory_id}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving chat Q&A: {str(e)}")
+
+@router.delete("/delete/{memory_id}/{user_id}", response_model=MemoryResponse)
+def delete_memory_route(memory_id: str = Path(...), user_id: str = Path(...)):
+    try:
+        delete_memory(memory_id, user_id)
+        return MemoryResponse(success=True, message=f"Deleted memory {memory_id}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting memory: {str(e)}")

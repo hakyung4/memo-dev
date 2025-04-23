@@ -43,3 +43,9 @@ def query_similar_memories(query_embedding: list[float], top_k=5):
         return result.matches
     except Exception as e:
         raise RuntimeError(f"query_similar_memories failed: {str(e)}")
+
+def delete_vector(vector_id: str):
+    try:
+        index.delete(ids=[vector_id])
+    except Exception as e:
+        raise RuntimeError(f"delete_vector failed: {str(e)}")

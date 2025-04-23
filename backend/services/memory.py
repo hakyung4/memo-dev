@@ -1,7 +1,7 @@
 from backend.services.embedding import get_embedding
-from backend.db.pinecone_db import upsert_memory, query_similar_memories
+from backend.db.pinecone_db import upsert_memory, query_similar_memories, delete_vector
 from backend.schemas import MemoryEntry, ChatSaveRequest
-from backend.db.pg import insert_memory_to_db, fetch_memories_by_ids
+from backend.db.pg import insert_memory_to_db, fetch_memories_by_ids, delete_memory_from_db
 from datetime import datetime
 import uuid
     
@@ -84,3 +84,6 @@ def store_chat_memory(entry: ChatSaveRequest):
     except Exception as e:
         raise RuntimeError(f"store_chat_memory failed: {str(e)}")
 
+def delete_memory(memory_id: str, user_id: str):
+    delete_vector(memory_id)
+    delete_memory_from_db(memory_id, user_id)

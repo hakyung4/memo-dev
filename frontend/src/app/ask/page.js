@@ -21,9 +21,8 @@ export default function AskPage() {
     }, []);
     if (!session) return null;
   return (
-    <main className="min-h-screen px-4 py-10 md:px-10 bg-white dark:bg-black text-black dark:text-white">
-      <h1 className="text-3xl font-bold mb-6">💬 Ask GPT</h1>
+    <div className='bg-white dark:bg-black text-black dark:text-white'>
       <ChatInterface />
-    </main>
+    </div>
   );
 }

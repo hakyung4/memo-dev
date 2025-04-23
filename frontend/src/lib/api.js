@@ -33,3 +33,13 @@ export async function saveChatQA(payload) {
   if (!res.ok) throw new Error('Save failed');
   return await res.json();
 }
+
+export async function deleteMemory(memoryId, userId) {
+  const res = await fetch(`http://127.0.0.1:8000/api/memory/delete/${memoryId}/${userId}`, {
+    method: 'DELETE',
+  });
+
+  if (!res.ok) throw new Error('Failed to delete memory');
+  return await res.json();
+}
+

@@ -56,3 +56,14 @@ def fetch_memories_by_ids(user_id, ids):
     cur.close()
     conn.close()
     return rows
+
+def delete_memory_from_db(memory_id, user_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "DELETE FROM memories WHERE id = %s AND user_id = %s",
+        (memory_id, user_id)
+    )
+    conn.commit()
+    cur.close()
+    conn.close()

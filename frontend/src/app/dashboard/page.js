@@ -46,14 +46,22 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen px-4 py-10 md:px-10 bg-white dark:bg-black text-black dark:text-white">
-      <h1 className="text-3xl font-bold mb-4">🔍 Search Your Memory</h1>
-      <SearchBar query={query} setQuery={setQuery} onSearch={handleSearch} />
+      <div className="sticky top-16 z-30 bg-white dark:bg-black pt-6 pb-4 md:px-10 border-b border-zinc-200 dark:border-zinc-800 shadow-sm">
+        <h1 className="text-3xl font-bold mb-4">🔍 Search Your Memory</h1>
+        <SearchBar query={query} setQuery={setQuery} onSearch={handleSearch} />
+      </div>
       <div className="my-8">
         <VisualPreview results={results} />
       </div>
       <div className="space-y-6">
         {results.map((entry, i) => (
-          <MemoryCard key={i} entry={entry} />
+          <MemoryCard
+            key={i}
+            entry={entry}
+            onDelete={() => {
+              setResults((prev) => prev.filter((e) => e.id !== entry.id));
+            }}
+          />
         ))}
       </div>
     </main>
