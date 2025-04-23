@@ -29,7 +29,7 @@ export default function Hero() {
       >
         <a
           href="/dashboard"
-          className="px-6 py-3 bg-black text-white rounded-xl shadow hover:bg-gray-800"
+          className="px-6 py-3 bg-black dark:text-black dark:bg-white text-white rounded-xl shadow dark:hover:bg-gray-300 hover:bg-gray-800"
         >
           Try the Demo
         </a>

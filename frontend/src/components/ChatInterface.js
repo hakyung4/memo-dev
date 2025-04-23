@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { chatWithGPT, saveChatQA } from '@/lib/api';
-import { supabase } from '@/lib/supabaseClient';
 import ReactMarkdown from 'react-markdown';
 
 export default function ChatInterface() {
@@ -12,9 +11,9 @@ export default function ChatInterface() {
   const [session, setSession] = useState(null);
 
   // Fetch session on first render
-  useState(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-  }, []);
+  // useState(() => {
+  //   supabase.auth.getSession().then(({ data }) => setSession(data.session));
+  // }, []);
 
   const handleSend = async () => {
     if (!input.trim() || !session?.user?.id) return;
@@ -66,7 +65,7 @@ export default function ChatInterface() {
             const confirmReset = window.confirm("Are you sure you want to start a new chat? This will erase the current conversation.");
             if (confirmReset) setMessages([]);
           }}
-          className="text-sm text-blue-600 hover:underline"
+          className="text-sm text-blue-600 hover:underline cursor-pointer"
         >
           🆕 New Chat
         </button>
@@ -80,15 +79,17 @@ export default function ChatInterface() {
             </div>
             {/* <div className="mb-2 text-black dark:text-white">{msg.content}</div> */}
             {msg.role === 'assistant' ? (
-              <ReactMarkdown className="prose dark:prose-invert max-w-none mt-1 mb-3">
+              <div className="prose dark:prose-invert max-w-none mt-1 mb-3">
+              <ReactMarkdown>
                 {msg.content}
               </ReactMarkdown>
+              </div>
             ) : (
               <div className="text-black dark:text-white mt-1 mb-3">{msg.content}</div>
             )}
             {msg.role === 'assistant' && i >= 1 && messages[i - 1].role === 'user' && (
               <button
-                className="text-xs text-purple-600 hover:underline"
+                className="text-xs text-purple-600 hover:underline cursor-pointer"
                 onClick={() => handleSave(messages[i - 1].content, msg.content)}
               >
                 💾 Save to Memory
@@ -110,7 +111,7 @@ export default function ChatInterface() {
         <button
           onClick={handleSend}
           disabled={loading}
-          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 cursor-pointer"
         >
           {loading ? 'Sending...' : 'Send'}
         </button>

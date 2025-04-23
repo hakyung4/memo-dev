@@ -7,7 +7,6 @@ import { supabase } from '@/lib/supabaseClient';
 import SearchBar from '@/components/SearchBar';
 import MemoryCard from '@/components/MemoryCard';
 import VisualPreview from '@/components/VisualPreview';
-import ChatInterface from '@/components/ChatInterface';
 import { searchMemory } from '@/lib/api';
 
 export default function DashboardPage() {
@@ -56,8 +55,6 @@ export default function DashboardPage() {
         {results.map((entry, i) => (
           <MemoryCard key={i} entry={entry} />
         ))}
-        <hr className="my-10 border-zinc-300 dark:border-zinc-700" />
-        <ChatInterface />
       </div>
     </main>
   );
