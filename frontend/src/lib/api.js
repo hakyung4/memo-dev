@@ -79,3 +79,11 @@ export async function saveMemory(payload) {
 
   return await res.json();
 }
+
+export async function fetchAllMemories(userId) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/memory/all/${userId}`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch all memories");
+  }
+  return await res.json();
+}

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Path
 from backend.schemas import MemoryEntry, MemoryQuery, MemoryResponse, ChatSaveRequest, GraphResponse
 from backend.services.memory import store_memory, search_memory, store_chat_memory, delete_memory, get_memory_graph, extract_keywords
-from backend.db.pg import fetch_memory_by_id
+from backend.db.pg import fetch_memory_by_id, fetch_all_memories
 
 router = APIRouter()
 
@@ -80,3 +80,11 @@ def memory_detail(memory_id: str):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching memory detail: {str(e)}")
+    
+@router.get("/all/{user_id}", response_model=list[MemoryEntry])
+def all_memories(user_id: str):
+    try:
+        memories = fetch_all_memories(user_id)
+        return [MemoryEntry(**mem) for mem in memories]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching all memories: {str(e)}")

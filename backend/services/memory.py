@@ -1,7 +1,7 @@
 from backend.services.embedding import get_embedding
 from backend.db.pinecone_db import upsert_memory, query_similar_memories, delete_vector, fetch_user_vectors
 from backend.schemas import MemoryEntry, ChatSaveRequest, GraphNode, GraphEdge, GraphResponse, MemoryQuery
-from backend.db.pg import insert_memory_to_db, fetch_memories_by_ids, delete_memory_from_db, fetch_memory_ids, fetch_memories_filtered
+from backend.db.pg import insert_memory_to_db, fetch_memories_by_ids, delete_memory_from_db, fetch_memory_ids, fetch_memories_filtered, fetch_memories_filtered_no_ids
 from datetime import datetime
 import uuid
 import numpy as np
@@ -53,25 +53,28 @@ def store_memory(entry: MemoryEntry):
     
 def search_memory(query_obj: MemoryQuery):
     try:
+        if not query_obj.query or query_obj.query.strip() == "":
+            # 🆕 No semantic search if no query — just SQL filters
+            return fetch_memories_filtered_no_ids(
+                user_id=query_obj.user_id,
+                project=query_obj.project,
+                date_from=query_obj.date_from,
+                date_to=query_obj.date_to,
+                fixed_by_ai=query_obj.fixed_by_ai,
+                tags=query_obj.tags
+            )
+        
         query_embedding = get_embedding(query_obj.query)
         pinecone_matches = query_similar_memories(query_embedding)
-
-        print("\n--- Pinecone Matches ---")
-        for match in pinecone_matches:
-            print("Match ID:", match.id)
-            print("Metadata:", match.metadata)
 
         matching_ids = [
             match.metadata["id"] for match in pinecone_matches
             if str(match.metadata.get("user_id")) == str(query_obj.user_id)
         ]
 
-        print("Matching IDs after filter:", matching_ids)
-
         if not matching_ids:
             return []
 
-        # 🧠 Now pass matching_ids + filters
         return fetch_memories_filtered(
             user_id=query_obj.user_id,
             ids=matching_ids,

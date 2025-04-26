@@ -147,3 +147,52 @@ def fetch_memories_filtered(user_id, ids, project=None, date_from=None, date_to=
     conn.close()
     return rows
 
+def fetch_all_memories(user_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT * FROM memories
+        WHERE user_id = %s
+        ORDER BY timestamp DESC
+        """,
+        (user_id,)
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+def fetch_memories_filtered_no_ids(user_id, project=None, date_from=None, date_to=None, fixed_by_ai=None, tags=None):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    base_query = """
+        SELECT * FROM memories
+        WHERE user_id = %s
+    """
+    params = [str(user_id)]
+
+    if project:
+        base_query += " AND project = %s"
+        params.append(project)
+
+    if date_from:
+        base_query += " AND timestamp >= %s"
+        params.append(date_from)
+
+    if date_to:
+        base_query += " AND timestamp <= %s"
+        params.append(date_to)
+
+    if fixed_by_ai is not None:
+        base_query += " AND fixed_by_ai = %s"
+        params.append(fixed_by_ai)
+
+    base_query += " ORDER BY timestamp DESC"
+
+    cur.execute(base_query, params)
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows

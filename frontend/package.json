@@ -12,6 +12,8 @@
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
     "@tailwindcss/postcss": "^4.1.4",
+    "@tiptap/react": "^2.11.7",
+    "@tiptap/starter-kit": "^2.11.7",
     "cytoscape": "^3.31.2",
     "framer-motion": "^12.7.4",
     "lucide-react": "^0.501.0",

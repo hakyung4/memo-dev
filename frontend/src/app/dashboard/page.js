@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabaseClient';
 import SearchBar from '@/components/SearchBar';
 import MemoryCard from '@/components/MemoryCard';
 import { searchMemory } from '@/lib/api';
+import { motion, AnimatePresence } from 'framer-motion'; // 🆕 Add animation
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -15,11 +16,10 @@ export default function DashboardPage() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // 🆕 Filters
   const [projectFilter, setProjectFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [fixedFilter, setFixedFilter] = useState(''); // 'fixed', 'original', ''
+  const [fixedFilter, setFixedFilter] = useState('');
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -37,15 +37,17 @@ export default function DashboardPage() {
     if (!session?.user?.id) return;
     try {
       setLoading(true);
+
       const filters = {
-        query: query || '', // Always send something
+        query: query || '',
         user_id: session.user.id,
         project: projectFilter || undefined,
         fixed_by_ai: fixedFilter === 'fixed' ? true : fixedFilter === 'original' ? false : undefined,
         date_from: dateFrom ? new Date(dateFrom).toISOString() : undefined,
         date_to: dateTo ? new Date(dateTo).toISOString() : undefined,
-        tags: undefined, // Later for tags
+        tags: undefined,
       };
+
       const res = await searchMemory(filters);
       setResults(res);
     } catch (err) {
@@ -54,7 +56,6 @@ export default function DashboardPage() {
       setLoading(false);
     }
   };
-  
 
   const handleClearFilters = () => {
     setProjectFilter('');
@@ -67,14 +68,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (session?.user?.id !== undefined) {
-      if (query.length > 0) {
-        handleSearch();
-      } else {
-        setResults([]); // 🆕 Clear results when search input is cleared
-      }
+      handleSearch();
     }
-  }, [query]);
-  
+  }, [session?.user?.id]);
 
   if (!session) return null;
 
@@ -149,15 +145,25 @@ export default function DashboardPage() {
         )}
 
         {/* Memory Cards */}
-        {!loading && results.map((entry, i) => (
-          <MemoryCard
-            key={i}
-            entry={entry}
-            onDelete={() => {
-              setResults((prev) => prev.filter((e) => e.id !== entry.id));
-            }}
-          />
-        ))}
+        {!loading && (
+          <AnimatePresence>
+            {results.map((entry) => (
+              <motion.div
+                key={entry.id}
+                initial={{ opacity: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3 }}
+              >
+                <MemoryCard
+                  entry={entry}
+                  onDelete={() => {
+                    setResults((prev) => prev.filter((e) => e.id !== entry.id));
+                  }}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
       </div>
     </main>
   );
