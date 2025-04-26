@@ -55,6 +55,9 @@ export default function Navbar() {
           <Link href="/ask" className="text-sm hover:underline text-gray-700 dark:text-gray-300">
             Ask GPT
           </Link>
+          <Link href="/upload" className="text-sm hover:underline text-gray-700 dark:text-gray-300">
+            Upload
+          </Link>
 
 
           {session?.user ? (

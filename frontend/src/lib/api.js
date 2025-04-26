@@ -12,7 +12,6 @@ export async function searchMemory(filters) {
   return await res.json();
 }
 
-
 export async function chatWithGPT(prompt, userId, history) {
   const res = await fetch('http://127.0.0.1:8000/api/gpt/chat', {
     method: 'POST',
@@ -62,6 +61,20 @@ export async function getWeeklyDigest(userId, selectedDate = null) {
 
   if (!res.ok) {
     throw new Error('Failed to fetch weekly digest');
+  }
+
+  return await res.json();
+}
+
+export async function saveMemory(payload) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/memory/add`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to upload memory');
   }
 
   return await res.json();

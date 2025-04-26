@@ -6,7 +6,6 @@ import { supabase } from '@/lib/supabaseClient';
 
 import SearchBar from '@/components/SearchBar';
 import MemoryCard from '@/components/MemoryCard';
-import VisualPreview from '@/components/VisualPreview';
 import { searchMemory } from '@/lib/api';
 
 export default function DashboardPage() {
@@ -131,11 +130,6 @@ export default function DashboardPage() {
 
         {/* Search Bar */}
         <SearchBar query={query} setQuery={setQuery} onSearch={handleSearch} />
-      </div>
-
-      {/* Visual Preview */}
-      <div className="my-8">
-        <VisualPreview results={results} />
       </div>
 
       {/* Results */}
