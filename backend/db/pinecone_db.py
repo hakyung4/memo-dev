@@ -49,3 +49,17 @@ def delete_vector(vector_id: str):
         index.delete(ids=[vector_id])
     except Exception as e:
         raise RuntimeError(f"delete_vector failed: {str(e)}")
+    
+def fetch_user_vectors(user_id: str):
+    try:
+        results = index.query(
+            vector=[0.0]*1536,
+            top_k=1000,
+            filter={"user_id": user_id},
+            include_metadata=True,
+            include_values=True
+        )
+        return results.matches
+    except Exception as e:
+        raise RuntimeError(f"fetch_user_vectors failed: {str(e)}")
+

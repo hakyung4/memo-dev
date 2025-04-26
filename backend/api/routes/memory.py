@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Path
-from backend.schemas import MemoryEntry, MemoryQuery, MemoryResponse, ChatSaveRequest
-from backend.services.memory import store_memory, search_memory, store_chat_memory, delete_memory
+from backend.schemas import MemoryEntry, MemoryQuery, MemoryResponse, ChatSaveRequest, GraphResponse
+from backend.services.memory import store_memory, search_memory, store_chat_memory, delete_memory, get_memory_graph, extract_keywords
+from backend.db.pg import fetch_memory_by_id
 
 router = APIRouter()
 
@@ -15,7 +16,7 @@ def add_memory(entry: MemoryEntry):
 @router.post("/search", response_model=list[MemoryEntry])
 def search_memory_route(query: MemoryQuery):
     try:
-        results = search_memory(query.query, query.user_id)
+        results = search_memory(query)
 
         if not results:
             print("⚠️ No rows fetched from fetch_memories_by_ids")
@@ -28,7 +29,6 @@ def search_memory_route(query: MemoryQuery):
         models = []
         for row in results:
             try:
-                # Ensure all required fields are present
                 row.setdefault("fixed_by_ai", False)
                 models.append(MemoryEntry(**row))
             except Exception as e:
@@ -39,6 +39,7 @@ def search_memory_route(query: MemoryQuery):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error searching memory: {str(e)}")
+
 
 @router.post("/save-chat", response_model=MemoryResponse)
 def save_chat(entry: ChatSaveRequest):
@@ -55,3 +56,27 @@ def delete_memory_route(memory_id: str = Path(...), user_id: str = Path(...)):
         return MemoryResponse(success=True, message=f"Deleted memory {memory_id}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting memory: {str(e)}")
+    
+@router.get("/graph/{user_id}", response_model=GraphResponse)
+def memory_graph(user_id: str):
+    try:
+        return get_memory_graph(user_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating graph: {str(e)}")
+    
+@router.get("/detail/{memory_id}", response_model=MemoryEntry)
+def memory_detail(memory_id: str):
+    try:
+        memory = fetch_memory_by_id(memory_id)
+        if not memory:
+            raise HTTPException(status_code=404, detail="Memory not found")
+
+        # 🧠 Extract keywords from memory text
+        keywords = extract_keywords(memory.get("text", ""))
+
+        return MemoryEntry(
+            **memory,
+            suggested_keywords=keywords
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching memory detail: {str(e)}")

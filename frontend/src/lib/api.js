@@ -1,16 +1,17 @@
-export async function searchMemory(query, userId) {
-    const res = await fetch("http://127.0.0.1:8000/api/memory/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, user_id: userId }),
-    });
-  
-    if (!res.ok) {
-      throw new Error("Failed to fetch memory results");
-    }
-  
-    return await res.json();
+export async function searchMemory(filters) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/memory/search`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(filters),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch memory results");
+  }
+
+  return await res.json();
 }
+
 
 export async function chatWithGPT(prompt, userId, history) {
   const res = await fetch('http://127.0.0.1:8000/api/gpt/chat', {
@@ -42,4 +43,11 @@ export async function deleteMemory(memoryId, userId) {
   if (!res.ok) throw new Error('Failed to delete memory');
   return await res.json();
 }
+
+export async function getMemoryGraph(userId) {
+  const res = await fetch(`http://127.0.0.1:8000/api/memory/graph/${userId}`);
+  if (!res.ok) throw new Error('Failed to load graph data');
+  return res.json();
+}
+
 

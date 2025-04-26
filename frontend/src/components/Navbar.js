@@ -46,6 +46,9 @@ export default function Navbar() {
           <Link href="/dashboard" className="text-sm hover:underline text-gray-700 dark:text-gray-300">
             Dashboard
           </Link>
+          <Link href="/graph" className="text-sm hover:underline text-gray-700 dark:text-gray-300">
+            Graph
+          </Link>
           <Link href="/ask" className="text-sm hover:underline text-gray-700 dark:text-gray-300">
             Ask GPT
           </Link>
