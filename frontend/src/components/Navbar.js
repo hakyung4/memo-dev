@@ -46,6 +46,9 @@ export default function Navbar() {
           <Link href="/dashboard" className="text-sm hover:underline text-gray-700 dark:text-gray-300">
             Dashboard
           </Link>
+          <Link href="/weekly-digest" className="text-sm hover:underline text-gray-700 dark:text-gray-300">
+            Weekly Digest
+          </Link>
           <Link href="/graph" className="text-sm hover:underline text-gray-700 dark:text-gray-300">
             Graph
           </Link>
