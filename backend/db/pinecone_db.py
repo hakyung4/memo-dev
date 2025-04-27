@@ -1,6 +1,6 @@
 import os
 import uuid
-from pinecone import Pinecone, ServerlessSpec
+from pinecone import Pinecone, ServerlessSpec, Index
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -63,3 +63,18 @@ def fetch_user_vectors(user_id: str):
     except Exception as e:
         raise RuntimeError(f"fetch_user_vectors failed: {str(e)}")
 
+def query_project_memories(query_embedding, user_id, project, top_k=5):
+    try:
+        filter_conditions = {
+            "user_id": user_id,
+            "project": project,
+        }
+        result = index.query(
+            vector=query_embedding,
+            top_k=top_k,
+            filter=filter_conditions,
+            include_metadata=True
+        )
+        return result.matches
+    except Exception as e:
+        raise RuntimeError(f"query_project_memories failed: {str(e)}")

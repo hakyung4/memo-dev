@@ -10,6 +10,7 @@ class MemoryEntry(BaseModel):
     text: str
     timestamp: Optional[datetime] = None
     fixed_by_ai: Optional[bool] = False
+    tags: Optional[List[str]] = []
     suggested_keywords: Optional[List[str]] = []
 
 class MemoryQuery(BaseModel):
@@ -19,7 +20,7 @@ class MemoryQuery(BaseModel):
     date_from: Optional[datetime] = None
     date_to: Optional[datetime] = None
     fixed_by_ai: Optional[bool] = None
-    tags: Optional[List[str]] = None  # for future extension
+    tags: Optional[List[str]] = None 
     
 class MemoryResponse(BaseModel):
     success: bool
@@ -32,6 +33,7 @@ class ChatSaveRequest(BaseModel):
     project: Optional[str] = None
     filename: Optional[str] = None
     fixed_by_ai: Optional[bool] = True
+    tags: Optional[List[str]] = []
 
 class GraphNode(BaseModel):
     id: str

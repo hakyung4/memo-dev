@@ -12,19 +12,25 @@ export async function searchMemory(filters) {
   return await res.json();
 }
 
-export async function chatWithGPT(prompt, userId, history) {
-  const res = await fetch('http://127.0.0.1:8000/api/gpt/chat', {
+export async function chatWithGPT(prompt, userId, history, project = '') {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/gpt/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt, history }),
+    body: JSON.stringify({ prompt, history, project, user_id: userId }), // 🆕 add user_id
   });
 
-  if (!res.ok) throw new Error('GPT chat failed');
+  if (!res.ok) {
+    const error = await res.text();
+    console.error('❌ GPT API Error:', error);
+    throw new Error('GPT chat failed');
+  }
+
   return await res.json();
 }
 
+
 export async function saveChatQA(payload) {
-  const res = await fetch('http://127.0.0.1:8000/api/memory/save-chat', {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/memory/save-chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -33,6 +39,7 @@ export async function saveChatQA(payload) {
   if (!res.ok) throw new Error('Save failed');
   return await res.json();
 }
+
 
 export async function deleteMemory(memoryId, userId) {
   const res = await fetch(`http://127.0.0.1:8000/api/memory/delete/${memoryId}/${userId}`, {
@@ -85,5 +92,11 @@ export async function fetchAllMemories(userId) {
   if (!res.ok) {
     throw new Error("Failed to fetch all memories");
   }
+  return await res.json();
+}
+
+export async function fetchProjects(userId) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/memory/projects/${userId}`);
+  if (!res.ok) throw new Error('Failed to fetch projects');
   return await res.json();
 }

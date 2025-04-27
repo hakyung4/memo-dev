@@ -18,15 +18,15 @@ def get_connection():
         cursor_factory=RealDictCursor
     )
 
-def insert_memory_to_db(memory_id, user_id, project, filename, text, timestamp, fixed_by_ai):
+def insert_memory_to_db(memory_id, user_id, project, filename, text, timestamp, fixed_by_ai, tags=None):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
         """
-        INSERT INTO memories (id, user_id, project, filename, text, timestamp, fixed_by_ai)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO memories (id, user_id, project, filename, text, timestamp, fixed_by_ai, tags)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """,
-        (memory_id, user_id, project, filename, text, timestamp, fixed_by_ai)
+        (memory_id, user_id, project, filename, text, timestamp, fixed_by_ai, tags)
     )
     conn.commit()
     cur.close()
@@ -132,9 +132,8 @@ def fetch_memories_filtered(user_id, ids, project=None, date_from=None, date_to=
 
     # (Optional) Tags filtering (if you add tagging support later)
     if tags:
-        # You can join tags as a text field and search for overlaps
-        # Here skipping actual implementation until tagging system is ready
-        pass
+        base_query += " AND tags && %s"
+        params.append(tags)
 
     base_query += " ORDER BY timestamp DESC"
 
@@ -188,10 +187,30 @@ def fetch_memories_filtered_no_ids(user_id, project=None, date_from=None, date_t
     if fixed_by_ai is not None:
         base_query += " AND fixed_by_ai = %s"
         params.append(fixed_by_ai)
+    
+    if tags:
+        base_query += " AND tags && %s"
+        params.append(tags)
 
     base_query += " ORDER BY timestamp DESC"
 
     cur.execute(base_query, params)
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+def fetch_user_projects(user_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT DISTINCT project
+        FROM memories
+        WHERE user_id = %s
+        """,
+        (user_id,)
+    )
     rows = cur.fetchall()
     cur.close()
     conn.close()

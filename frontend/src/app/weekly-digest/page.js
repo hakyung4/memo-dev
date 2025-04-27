@@ -129,8 +129,9 @@ export default function WeeklyDigestPage() {
                       user_id: session.user.id,
                       text: memory.text,
                       timestamp: memory.timestamp,
-                      project: 'Weekly Digest',
-                      filename: '',
+                      project: memory.project || '',
+                      filename: memory.filename || '',
+                      tags: memory.tags || [], // 🆕 Pass tags properly
                     }}
                     onDelete={() => handleDeleteMemory(memory.id)}
                   />
@@ -154,7 +155,6 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center text-center space-y-4">
       <div className="w-64 h-64 bg-gray-100 rounded-full flex items-center justify-center dark:bg-zinc-800">
-        {/* Placeholder circle where you can later put an SVG */}
         <span className="text-gray-400">No Memories</span>
       </div>
       <p className="text-gray-400">No memories saved this week yet!</p>

@@ -8,12 +8,10 @@ def get_weekly_digest(user_id: str, selected_date: date = None):
 
         # 🧠 Determine the week (Monday to Sunday)
         if selected_date:
-            # User picked a specific day — find Monday of that week
-            weekday = selected_date.weekday()  # Monday = 0, Sunday = 6
+            weekday = selected_date.weekday()
             monday = selected_date - timedelta(days=weekday)
             sunday = monday + timedelta(days=6)
         else:
-            # Default to current week
             today = datetime.utcnow().date()
             weekday = today.weekday()
             monday = today - timedelta(days=weekday)
@@ -22,9 +20,10 @@ def get_weekly_digest(user_id: str, selected_date: date = None):
         monday_start = datetime.combine(monday, datetime.min.time())
         sunday_end = datetime.combine(sunday, datetime.max.time())
 
+        # ✅ Include project, filename, tags
         cur.execute(
             """
-            SELECT id, text, timestamp
+            SELECT id, text, timestamp, project, filename, tags
             FROM memories
             WHERE user_id = %s
             AND timestamp BETWEEN %s AND %s

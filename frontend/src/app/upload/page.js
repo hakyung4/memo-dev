@@ -11,6 +11,8 @@ export default function UploadPage() {
 
   const [project, setProject] = useState('');
   const [filename, setFilename] = useState('');
+  const [tags, setTags] = useState([]);
+  const [tagInput, setTagInput] = useState('');
   const [fixedByAI, setFixedByAI] = useState(false);
 
   const [uploading, setUploading] = useState(false);
@@ -84,7 +86,6 @@ export default function UploadPage() {
 
     let textToSave = editor.getHTML().trim();
 
-    // 🧹 If user just typed plain text (single paragraph), extract only inner text
     if (textToSave.startsWith('<p>') && textToSave.endsWith('</p>') && !textToSave.includes('<pre')) {
       textToSave = textToSave.replace(/^<p>/, '').replace(/<\/p>$/, '');
     }
@@ -101,6 +102,7 @@ export default function UploadPage() {
         filename: filename || '',
         text: textToSave,
         fixed_by_ai: fixedByAI,
+        tags: tags.length > 0 ? tags : undefined,
       };
 
       await saveMemory(payload);
@@ -108,6 +110,7 @@ export default function UploadPage() {
       setProject('');
       setFilename('');
       setFixedByAI(false);
+      setTags([]);
       setSuccess(true);
       if (editor) editor.commands.clearContent();
       if (fileInputRef.current) {
@@ -121,12 +124,28 @@ export default function UploadPage() {
     }
   };
 
+  const handleTagKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const newTag = tagInput.trim().toLowerCase();
+      if (newTag && newTag.length <= 20 && !tags.includes(newTag)) {
+        setTags([...tags, newTag]);
+      }
+      setTagInput('');
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove) => {
+    setTags(tags.filter((tag) => tag !== tagToRemove));
+  };
+
   if (!session) return null;
 
   return (
     <main className="p-6 space-y-8 flex flex-col items-center">
       <h1 className="text-3xl font-bold text-center">Upload a New Memory 📚</h1>
       <div className="w-full max-w-2xl space-y-6">
+
         {/* Project */}
         <div className="flex flex-col">
           <label className="mb-1 text-sm">Project (optional)</label>
@@ -148,6 +167,27 @@ export default function UploadPage() {
             className="px-3 py-2 border rounded-md text-gray-900 dark:text-gray-50 text-sm dark:bg-zinc-800 dark:border-zinc-700"
             placeholder="Optional: set manually or filled from file upload"
           />
+        </div>
+
+        {/* Tags */}
+        <div className="flex flex-col">
+          <label className="mb-1 text-sm">Tags (optional)</label>
+          <input
+            type="text"
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            onKeyDown={handleTagKeyDown}
+            placeholder="Type a tag and press Enter"
+            className="px-3 py-2 border rounded-md text-sm dark:bg-zinc-800 dark:border-zinc-700"
+          />
+          <div className="flex flex-wrap gap-2 mt-2">
+            {tags.map((tag, index) => (
+              <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs flex items-center gap-1 dark:bg-blue-800 dark:text-white">
+                {tag}
+                <button onClick={() => handleRemoveTag(tag)} className="text-xs ml-1">❌</button>
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* Upload File */}
@@ -214,6 +254,7 @@ export default function UploadPage() {
               setProject('');
               setFilename('');
               setFixedByAI(false);
+              setTags([]);
               if (editor) editor.commands.clearContent();
               if (fileInputRef.current) {
                 fileInputRef.current.value = '';
@@ -227,26 +268,6 @@ export default function UploadPage() {
           </button>
         </div>
       </div>
-
-      {/* 🧹 ProseMirror and pre tag custom styles */}
-      <style jsx global>{`
-        .ProseMirror {
-          background: transparent !important;
-          border: none !important;
-          padding: 0 !important;
-          font-size: 0.875rem;
-          font-family: inherit;
-        }
-        pre {
-          background: transparent !important;
-          font-size: 0.875rem;
-          font-family: inherit;
-          padding: 0 !important;
-          margin: 0 !important;
-          white-space: pre-wrap;
-          word-break: break-word;
-        }
-      `}</style>
     </main>
   );
 }

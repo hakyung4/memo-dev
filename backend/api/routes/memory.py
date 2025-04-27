@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Path
 from backend.schemas import MemoryEntry, MemoryQuery, MemoryResponse, ChatSaveRequest, GraphResponse
 from backend.services.memory import store_memory, search_memory, store_chat_memory, delete_memory, get_memory_graph, extract_keywords
-from backend.db.pg import fetch_memory_by_id, fetch_all_memories
+from backend.db.pg import fetch_memory_by_id, fetch_all_memories, fetch_user_projects
 
 router = APIRouter()
 
@@ -88,3 +88,11 @@ def all_memories(user_id: str):
         return [MemoryEntry(**mem) for mem in memories]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching all memories: {str(e)}")
+
+@router.get("/projects/{user_id}", response_model=list)
+def user_projects(user_id: str):
+    try:
+        projects = fetch_user_projects(user_id)
+        return projects
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching projects: {str(e)}")

@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabaseClient';
 import SearchBar from '@/components/SearchBar';
 import MemoryCard from '@/components/MemoryCard';
 import { searchMemory } from '@/lib/api';
-import { motion, AnimatePresence } from 'framer-motion'; // 🆕 Add animation
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -20,6 +20,7 @@ export default function DashboardPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [fixedFilter, setFixedFilter] = useState('');
+  const [tagFilter, setTagFilter] = useState(''); // 🆕
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -45,7 +46,7 @@ export default function DashboardPage() {
         fixed_by_ai: fixedFilter === 'fixed' ? true : fixedFilter === 'original' ? false : undefined,
         date_from: dateFrom ? new Date(dateFrom).toISOString() : undefined,
         date_to: dateTo ? new Date(dateTo).toISOString() : undefined,
-        tags: undefined,
+        tags: tagFilter ? [tagFilter] : undefined, // 🆕 Pass as array
       };
 
       const res = await searchMemory(filters);
@@ -63,6 +64,7 @@ export default function DashboardPage() {
     setDateTo('');
     setFixedFilter('');
     setQuery('');
+    setTagFilter('');
     setResults([]);
   };
 
@@ -76,11 +78,10 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen px-4 py-10 md:px-10 bg-white dark:bg-black text-black dark:text-white">
-      {/* Filters */}
       <div className="sticky top-16 z-30 bg-white dark:bg-black pt-6 pb-4 md:px-10 border-b border-zinc-200 dark:border-zinc-800 shadow-sm">
         <h1 className="text-3xl font-bold mb-4">🔍 Search Your Memory</h1>
 
-        {/* Filter Section */}
+        {/* Filters */}
         <div className="flex flex-wrap gap-4 mb-6">
           <input
             type="text"
@@ -110,6 +111,13 @@ export default function DashboardPage() {
             <option value="fixed">Fixed by AI</option>
             <option value="original">User Fixed</option>
           </select>
+          <input
+            type="text"
+            placeholder="Tag"
+            value={tagFilter}
+            onChange={(e) => setTagFilter(e.target.value.toLowerCase())}
+            className="px-3 py-2 border rounded-md text-sm dark:bg-zinc-800 dark:border-zinc-700"
+          />
           <button
             onClick={handleSearch}
             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm cursor-pointer"
@@ -130,21 +138,16 @@ export default function DashboardPage() {
 
       {/* Results */}
       <div className="space-y-6">
-        {/* Loading Spinner */}
         {loading && (
           <div className="text-center text-gray-400 dark:text-gray-500 my-8">
             Loading memories...
           </div>
         )}
-
-        {/* No Results Found */}
         {!loading && results.length === 0 && (
           <div className="text-center text-gray-400 dark:text-gray-500 mt-10 text-sm">
             No memories found. Try a different search or filters.
           </div>
         )}
-
-        {/* Memory Cards */}
         {!loading && (
           <AnimatePresence>
             {results.map((entry) => (
