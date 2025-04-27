@@ -22,7 +22,7 @@ export default function MemoryCard({ entry, onDelete }) {
 
   return (
     <div className="p-4 border rounded-xl shadow bg-white dark:bg-zinc-900 text-sm space-y-2 relative">
-      <div className="text-gray-600 text-xs">
+      <div className="text-gray-600 dark:text-gray-400 text-xs">
         📁 {entry.project || 'No Project'} / {entry.filename || 'No Filename'}
       </div>
 

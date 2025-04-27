@@ -6,21 +6,23 @@ import { supabase } from '@/lib/supabaseClient';
 
 import SearchBar from '@/components/SearchBar';
 import MemoryCard from '@/components/MemoryCard';
-import { searchMemory } from '@/lib/api';
+import { searchMemory, fetchProjects, fetchAllMemories } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function DashboardPage() {
   const router = useRouter();
   const [session, setSession] = useState(null);
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
+  const [allMemories, setAllMemories] = useState([]); // 🆕 All loaded memories
+  const [filteredMemories, setFilteredMemories] = useState([]); // 🆕 Locally filtered memories
   const [loading, setLoading] = useState(false);
 
   const [projectFilter, setProjectFilter] = useState('');
+  const [availableProjects, setAvailableProjects] = useState([]);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [fixedFilter, setFixedFilter] = useState('');
-  const [tagFilter, setTagFilter] = useState(''); // 🆕
+  const [tagFilter, setTagFilter] = useState('');
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -34,28 +36,69 @@ export default function DashboardPage() {
     fetchSession();
   }, []);
 
-  const handleSearch = async () => {
-    if (!session?.user?.id) return;
+  useEffect(() => {
+    if (session?.user?.id) {
+      loadMemories(session.user.id);
+      loadProjects(session.user.id);
+    }
+  }, [session?.user?.id]);
+
+  const loadMemories = async (userId) => {
     try {
       setLoading(true);
-
-      const filters = {
-        query: query || '',
-        user_id: session.user.id,
-        project: projectFilter || undefined,
-        fixed_by_ai: fixedFilter === 'fixed' ? true : fixedFilter === 'original' ? false : undefined,
-        date_from: dateFrom ? new Date(dateFrom).toISOString() : undefined,
-        date_to: dateTo ? new Date(dateTo).toISOString() : undefined,
-        tags: tagFilter ? [tagFilter] : undefined, // 🆕 Pass as array
-      };
-
-      const res = await searchMemory(filters);
-      setResults(res);
+      const memories = await fetchAllMemories(userId);
+      setAllMemories(memories);
+      setFilteredMemories(memories); // Initially show all
     } catch (err) {
-      console.error('Search error:', err);
+      console.error('Failed to fetch memories:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadProjects = async (userId) => {
+    try {
+      const res = await fetchProjects(userId);
+      const projectList = res.map((p) => p.project).filter((p) => p && p.trim() !== '');
+      setAvailableProjects(projectList);
+    } catch (err) {
+      console.error('Failed to fetch projects:', err);
+    }
+  };
+
+  const applyFilters = () => {
+    let filtered = allMemories;
+
+    // Project filter
+    if (projectFilter) {
+      filtered = filtered.filter((mem) => (mem.project || '') === projectFilter);
+    }
+
+    // Fixed filter
+    if (fixedFilter) {
+      const isFixed = fixedFilter === 'fixed';
+      filtered = filtered.filter((mem) => mem.fixed_by_ai === isFixed);
+    }
+
+    // Date filter
+    if (dateFrom) {
+      const from = new Date(dateFrom);
+      filtered = filtered.filter((mem) => new Date(mem.timestamp) >= from);
+    }
+    if (dateTo) {
+      const to = new Date(dateTo);
+      filtered = filtered.filter((mem) => new Date(mem.timestamp) <= to);
+    }
+
+    // Tag filter (substring match)
+    if (tagFilter) {
+      const tagLower = tagFilter.toLowerCase();
+      filtered = filtered.filter((mem) =>
+        (mem.tags || []).some((tag) => tag.toLowerCase().includes(tagLower))
+      );
+    }
+
+    setFilteredMemories(filtered);
   };
 
   const handleClearFilters = () => {
@@ -63,16 +106,42 @@ export default function DashboardPage() {
     setDateFrom('');
     setDateTo('');
     setFixedFilter('');
-    setQuery('');
     setTagFilter('');
-    setResults([]);
+    setQuery('');
+    setFilteredMemories(allMemories); // Reset to all memories
+  };
+
+  const handleTagChange = (e) => {
+    setTagFilter(e.target.value.toLowerCase());
+  };
+
+  const handleTagKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      applyFilters();
+    }
+  };
+
+  const handleProjectChange = (e) => {
+    setProjectFilter(e.target.value);
+    applyFilters();
+  };
+
+  const handleFixedFilterChange = (e) => {
+    setFixedFilter(e.target.value);
+  };
+
+  const handleDateFromChange = (e) => {
+    setDateFrom(e.target.value);
+  };
+
+  const handleDateToChange = (e) => {
+    setDateTo(e.target.value);
   };
 
   useEffect(() => {
-    if (session?.user?.id !== undefined) {
-      handleSearch();
-    }
-  }, [session?.user?.id]);
+    applyFilters();
+  }, [tagFilter, projectFilter, fixedFilter, dateFrom, dateTo]);
 
   if (!session) return null;
 
@@ -83,43 +152,54 @@ export default function DashboardPage() {
 
         {/* Filters */}
         <div className="flex flex-wrap gap-4 mb-6">
-          <input
-            type="text"
-            placeholder="Project"
+          <select
             value={projectFilter}
-            onChange={(e) => setProjectFilter(e.target.value)}
-            className="px-3 py-2 border rounded-md w-40 text-sm dark:bg-zinc-800 dark:border-zinc-700"
-          />
+            onChange={handleProjectChange}
+            className="px-3 py-2 border rounded-md w-48 text-sm dark:bg-zinc-800 dark:border-zinc-700"
+          >
+            <option value="">All Projects</option>
+            {availableProjects.map((proj, i) => (
+              <option key={i} value={proj}>
+                {proj}
+              </option>
+            ))}
+          </select>
+
           <input
             type="date"
             value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
+            onChange={handleDateFromChange}
             className="px-3 py-2 border rounded-md text-sm dark:bg-zinc-800 dark:border-zinc-700"
           />
+
           <input
             type="date"
             value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
+            onChange={handleDateToChange}
             className="px-3 py-2 border rounded-md text-sm dark:bg-zinc-800 dark:border-zinc-700"
           />
+
           <select
             value={fixedFilter}
-            onChange={(e) => setFixedFilter(e.target.value)}
+            onChange={handleFixedFilterChange}
             className="px-3 py-2 border rounded-md text-sm dark:bg-zinc-800 dark:border-zinc-700"
           >
             <option value="">All</option>
             <option value="fixed">Fixed by AI</option>
             <option value="original">User Fixed</option>
           </select>
+
           <input
             type="text"
-            placeholder="Tag"
+            placeholder="Filter by Tag"
             value={tagFilter}
-            onChange={(e) => setTagFilter(e.target.value.toLowerCase())}
+            onChange={handleTagChange}
+            onKeyDown={handleTagKeyDown}
             className="px-3 py-2 border rounded-md text-sm dark:bg-zinc-800 dark:border-zinc-700"
           />
+
           <button
-            onClick={handleSearch}
+            onClick={applyFilters}
             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm cursor-pointer"
           >
             Apply Filters
@@ -133,7 +213,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Search Bar */}
-        <SearchBar query={query} setQuery={setQuery} onSearch={handleSearch} />
+        <SearchBar query={query} setQuery={setQuery} onSearch={applyFilters} />
       </div>
 
       {/* Results */}
@@ -143,14 +223,14 @@ export default function DashboardPage() {
             Loading memories...
           </div>
         )}
-        {!loading && results.length === 0 && (
+        {!loading && filteredMemories.length === 0 && (
           <div className="text-center text-gray-400 dark:text-gray-500 mt-10 text-sm">
             No memories found. Try a different search or filters.
           </div>
         )}
         {!loading && (
           <AnimatePresence>
-            {results.map((entry) => (
+            {filteredMemories.map((entry) => (
               <motion.div
                 key={entry.id}
                 initial={{ opacity: 1 }}
@@ -160,7 +240,8 @@ export default function DashboardPage() {
                 <MemoryCard
                   entry={entry}
                   onDelete={() => {
-                    setResults((prev) => prev.filter((e) => e.id !== entry.id));
+                    setAllMemories((prev) => prev.filter((e) => e.id !== entry.id));
+                    setFilteredMemories((prev) => prev.filter((e) => e.id !== entry.id));
                   }}
                 />
               </motion.div>

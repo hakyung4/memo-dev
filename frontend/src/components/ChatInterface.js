@@ -202,7 +202,7 @@ export default function ChatInterface() {
 
         {/* 🆕 Tags Input */}
         <div className="flex flex-col">
-          <label className="text-sm">Tags (optional)</label>
+          <label className="text-sm text-gray-800 dark:text-gray-100">Tags (optional, max 20 characters)</label>
           <input
             type="text"
             value={tagInput}
@@ -215,7 +215,7 @@ export default function ChatInterface() {
             {tags.map((tag, index) => (
               <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs flex items-center gap-1 dark:bg-blue-800 dark:text-white">
                 {tag}
-                <button onClick={() => handleRemoveTag(tag)} className="text-xs ml-1">❌</button>
+                <button onClick={() => handleRemoveTag(tag)} className="text-xs ml-1 cursor-pointer">❌</button>
               </span>
             ))}
           </div>
