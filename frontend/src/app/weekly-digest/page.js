@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { getWeeklyDigest } from '@/lib/api';
-import MemoryCard from '@/components/MemoryCard';
 import { supabase } from '@/lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -62,14 +61,6 @@ export default function WeeklyDigestPage() {
     fetchDigestForDate(null);
   };
 
-  const handleDeleteMemory = (memoryId) => {
-    setDigest((prev) => ({
-      ...prev,
-      top_memories: prev.top_memories.filter((m) => m.id !== memoryId),
-      new_memory_count: prev.new_memory_count - 1,
-    }));
-  };
-
   if (loading) {
     return (
       <div className="p-6 text-center">
@@ -83,7 +74,7 @@ export default function WeeklyDigestPage() {
       <h1 className="text-3xl font-bold text-center">Weekly Digest 📚</h1>
 
       {/* Date Picker Section */}
-      <div className="flex flex-wrap items-center justify-center gap-4">
+      <div className="flex flex-wrap items-center justify-center gap-4 mb-6">
         <input
           type="date"
           value={pendingDate}
@@ -104,47 +95,39 @@ export default function WeeklyDigestPage() {
         </button>
       </div>
 
-      {/* Digest Content */}
+      {/* Digest Journal Content */}
       {(!digest || digest.new_memory_count === 0) ? (
         <EmptyState />
       ) : (
         <>
-          <p className="text-lg text-center">
+          <p className="text-lg text-center mb-6">
             You saved <span className="font-semibold">{digest.new_memory_count}</span> new memories this week! 🎉
           </p>
 
-          <div className="flex flex-col items-center space-y-6">
-            <AnimatePresence>
-              {digest.top_memories.map((memory) => (
-                <motion.div
-                  key={memory.id}
-                  initial={{ opacity: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3 }}
-                  className="w-full max-w-xl"
-                >
-                  <MemoryCard
-                    entry={{
-                      id: memory.id,
-                      user_id: session.user.id,
-                      text: memory.text,
-                      timestamp: memory.timestamp,
-                      project: memory.project || '',
-                      filename: memory.filename || '',
-                      tags: memory.tags || [], // 🆕 Pass tags properly
-                    }}
-                    onDelete={() => handleDeleteMemory(memory.id)}
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
+          <div className="flex flex-col items-center space-y-8 w-full max-w-3xl">
+            {digest.journal_entries.map((entry, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-md w-full"
+              >
+                <h2 className="text-xl font-bold mb-2">📚 {entry.memory_count} memories summarized</h2>
+                <p className="text-gray-700 dark:text-gray-300 mb-4">{entry.summary}</p>
+                {entry.examples.length > 0 && (
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    <div className="mb-2 font-semibold">Examples:</div>
+                    <ul className="list-disc ml-6 space-y-1">
+                      {entry.examples.map((example, i) => (
+                        <li key={i}>{example}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </motion.div>
+            ))}
           </div>
-
-          {digest.top_memories.length === 0 && (
-            <div className="text-center text-gray-400 text-sm mt-6">
-              You deleted all memories from this week. 🚀
-            </div>
-          )}
         </>
       )}
     </div>
