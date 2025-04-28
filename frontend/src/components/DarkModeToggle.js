@@ -1,29 +1,35 @@
-"use client";
+'use client';
+
+import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
-export default function DarkModeToggle() {
-  const [isDark, setIsDark] = useState(false);
+export default function DarkModeToggle({ compact = false }) {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const root = document.documentElement;
-    const prefersDark = localStorage.getItem("theme") === "dark" ||
-      (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    root.classList.toggle("dark", prefersDark);
-    setIsDark(prefersDark);
+    setMounted(true);
   }, []);
 
+  if (!mounted) {
+    return null; // Avoid hydration error
+  }
+
+  const isDark = theme === "dark";
+
   const toggleTheme = () => {
-    const root = document.documentElement;
-    const newTheme = isDark ? "light" : "dark";
-    root.classList.toggle("dark", !isDark);
-    localStorage.setItem("theme", newTheme);
-    setIsDark(!isDark);
+    setTheme(isDark ? "light" : "dark");
   };
 
   return (
     <button
       onClick={toggleTheme}
-      className="cursor-pointer fixed top-4 right-4 z-50 p-2 rounded-full bg-gray-200 dark:bg-gray-800 hover:scale-105 transition"
+      className={`cursor-pointer z-50 rounded-full border flex items-center justify-center transition ${
+        compact
+          ? "w-10 h-10 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 hover:scale-110"
+          : "fixed top-4 right-4 w-10 h-10 bg-gray-200 dark:bg-gray-800 border border-gray-400 dark:border-gray-600 hover:scale-110"
+      }`}
+      aria-label="Toggle Dark Mode"
     >
       {isDark ? "☀️" : "🌙"}
     </button>

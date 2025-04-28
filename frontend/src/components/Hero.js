@@ -34,7 +34,7 @@ export default function Hero() {
           Try the Demo
         </a>
         <a
-          href="#features"
+          href="/guide"
           className="px-6 py-3 border rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800"
         >
           Learn More
