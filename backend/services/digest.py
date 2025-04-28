@@ -29,47 +29,49 @@ def get_weekly_digest(user_id: str, selected_date: date = None):
         conn = get_connection()
         cur = conn.cursor()
 
-        # Determine week range
+        # 📅 Determine week range (Monday to Sunday)
         if selected_date:
-            weekday = selected_date.weekday()
-            monday = selected_date - timedelta(days=weekday)
-            sunday = monday + timedelta(days=6)
+            base_date = selected_date
         else:
-            today = datetime.utcnow().date()
-            weekday = today.weekday()
-            monday = today - timedelta(days=weekday)
-            sunday = monday + timedelta(days=6)
+            base_date = datetime.utcnow().date()
+
+        weekday = base_date.weekday()  # Monday = 0
+        monday = base_date - timedelta(days=weekday)
+        sunday = monday + timedelta(days=6)
 
         monday_start = datetime.combine(monday, datetime.min.time())
         sunday_end = datetime.combine(sunday, datetime.max.time())
 
-        # Fetch all memories of the week
+        # 🧠 Fetch all memories of the week (strict Monday–Sunday)
         cur.execute(
             """
             SELECT id, text, timestamp, project, filename, tags
             FROM memories
             WHERE user_id = %s
             AND timestamp BETWEEN %s AND %s
+            ORDER BY timestamp ASC
             """,
             (user_id, monday_start, sunday_end)
         )
 
         rows = cur.fetchall()
+
         cur.close()
         conn.close()
 
+        # 🧠 No fallback: if no memories, return empty
         if not rows:
             return {
                 "new_memory_count": 0,
                 "journal_entries": []
             }
 
-        # Get embeddings (mocked for now)
+        # 🧠 Otherwise, summarize normally
         embeddings = [get_embedding(row['text']) for row in rows]
 
-        # Simple clustering: assign each memory to a "center" by threshold
+        # Simple clustering by similarity
         clusters = []
-        threshold = 0.85  # Similarity threshold
+        threshold = 0.85
 
         for i, emb in enumerate(embeddings):
             assigned = False
@@ -84,20 +86,14 @@ def get_weekly_digest(user_id: str, selected_date: date = None):
                     "members": [rows[i]]
                 })
 
-        # Sort clusters by size
         clusters.sort(key=lambda c: len(c['members']), reverse=True)
-
-        # Take top 5 clusters
         top_clusters = clusters[:5]
 
         journal_entries = []
-
         for cluster in top_clusters:
-            # Combine texts
             combined_text = " ".join(m['text'] for m in cluster['members'])
             keywords = extract_keywords(combined_text)
 
-            # Fake summarization for now
             if keywords:
                 summary = f"This week, you focused on topics like: {', '.join(keywords)}."
             else:
@@ -106,7 +102,7 @@ def get_weekly_digest(user_id: str, selected_date: date = None):
             journal_entries.append({
                 "summary": summary,
                 "memory_count": len(cluster['members']),
-                "examples": [m['text'][:200] + '...' for m in cluster['members'][:2]]  # small samples
+                "examples": [m['text'][:200] + '...' for m in cluster['members'][:2]]
             })
 
         return {

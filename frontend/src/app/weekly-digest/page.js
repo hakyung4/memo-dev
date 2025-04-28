@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { getWeeklyDigest } from '@/lib/api';
 import { supabase } from '@/lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
+import JournalEntryCard from '@/components/JournalEntryCard';
 
 export default function WeeklyDigestPage() {
   const [session, setSession] = useState(null);
@@ -23,8 +24,15 @@ export default function WeeklyDigestPage() {
       setSession(data.session);
 
       try {
-        const result = await getWeeklyDigest(data.session.user.id);
+        const today = new Date();
+        const todayString = today.toISOString().split('T')[0];
+
+        // ✅ Always pass today's date explicitly
+        const result = await getWeeklyDigest(data.session.user.id, todayString);
         setDigest(result);
+
+        setSelectedDate(todayString);
+        setPendingDate(todayString);
       } catch (error) {
         console.error('Failed to load weekly digest:', error);
       } finally {
@@ -39,7 +47,8 @@ export default function WeeklyDigestPage() {
     if (!session?.user?.id) return;
     try {
       setLoading(true);
-      const result = await getWeeklyDigest(session.user.id, date);
+
+      const result = await getWeeklyDigest(session.user.id, date || undefined);
       setDigest(result);
     } catch (error) {
       console.error('Failed to fetch digest:', error);
@@ -56,9 +65,12 @@ export default function WeeklyDigestPage() {
   };
 
   const handleClear = () => {
-    setPendingDate('');
-    setSelectedDate('');
-    fetchDigestForDate(null);
+    const today = new Date();
+    const todayString = today.toISOString().split('T')[0];
+
+    setPendingDate(todayString);
+    setSelectedDate(todayString);
+    fetchDigestForDate(todayString);
   };
 
   if (loading) {
@@ -70,73 +82,58 @@ export default function WeeklyDigestPage() {
   }
 
   return (
-    <div className="p-6 space-y-6 flex flex-col items-center">
-      <h1 className="text-3xl font-bold text-center">Weekly Digest 📚</h1>
+    <main className="min-h-screen bg-white dark:bg-black text-black dark:text-white flex flex-col">
+      {/* Sticky Topbar */}
+      <div className="sticky top-16 z-30 bg-white dark:bg-black py-4 md:px-10 border-b border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-wrap items-center justify-between px-6">
+        <h1 className="text-2xl font-bold">Weekly Digest 📚</h1>
 
-      {/* Date Picker Section */}
-      <div className="flex flex-wrap items-center justify-center gap-4 mb-6">
-        <input
-          type="date"
-          value={pendingDate}
-          onChange={(e) => setPendingDate(e.target.value)}
-          className="px-3 py-2 border rounded-md text-sm dark:bg-zinc-800 dark:border-zinc-700"
-        />
-        <button
-          onClick={handleApply}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm"
-        >
-          Apply
-        </button>
-        <button
-          onClick={handleClear}
-          className="bg-gray-300 hover:bg-gray-400 text-black dark:bg-zinc-700 dark:text-white px-4 py-2 rounded-md text-sm"
-        >
-          Clear
-        </button>
+        <div className="flex items-center gap-4">
+          <input
+            type="date"
+            value={pendingDate}
+            onChange={(e) => setPendingDate(e.target.value)}
+            className="px-3 py-2 border rounded-md text-sm dark:bg-zinc-800 dark:border-zinc-700"
+          />
+          <button
+            onClick={handleApply}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm cursor-pointer"
+          >
+            Apply
+          </button>
+          <button
+            onClick={handleClear}
+            className="bg-gray-300 hover:bg-gray-400 text-black dark:bg-zinc-700 dark:text-white px-4 py-2 rounded-md text-sm cursor-pointer"
+          >
+            Clear
+          </button>
+        </div>
       </div>
 
-      {/* Digest Journal Content */}
-      {(!digest || digest.new_memory_count === 0) ? (
-        <EmptyState />
-      ) : (
-        <>
-          <p className="text-lg text-center mb-6">
-            You saved <span className="font-semibold">{digest.new_memory_count}</span> new memories this week! 🎉
-          </p>
+      {/* Digest Content */}
+      <div className="flex-1 flex flex-col gap-8 p-6 max-w-6xl mx-auto w-full">
+        {(!digest || digest.new_memory_count === 0) ? (
+          <EmptyState />
+        ) : (
+          <>
+            <p className="text-lg text-center mt-6">
+              You saved <span className="font-semibold">{digest.new_memory_count}</span> new memories this week! 🎉
+            </p>
 
-          <div className="flex flex-col items-center space-y-8 w-full max-w-3xl">
-            {digest.journal_entries.map((entry, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-md w-full"
-              >
-                <h2 className="text-xl font-bold mb-2">📚 {entry.memory_count} memories summarized</h2>
-                <p className="text-gray-700 dark:text-gray-300 mb-4">{entry.summary}</p>
-                {entry.examples.length > 0 && (
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    <div className="mb-2 font-semibold">Examples:</div>
-                    <ul className="list-disc ml-6 space-y-1">
-                      {entry.examples.map((example, i) => (
-                        <li key={i}>{example}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+            <AnimatePresence>
+              {digest.journal_entries.map((entry, idx) => (
+                <JournalEntryCard key={idx} entry={entry} />
+              ))}
+            </AnimatePresence>
+          </>
+        )}
+      </div>
+    </main>
   );
 }
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center text-center space-y-4">
+    <div className="flex flex-col items-center justify-center text-center space-y-4 py-20">
       <div className="w-64 h-64 bg-gray-100 rounded-full flex items-center justify-center dark:bg-zinc-800">
         <span className="text-gray-400">No Memories</span>
       </div>
