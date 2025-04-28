@@ -13,8 +13,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const [session, setSession] = useState(null);
   const [query, setQuery] = useState('');
-  const [allMemories, setAllMemories] = useState([]); // 🆕 All loaded memories
-  const [filteredMemories, setFilteredMemories] = useState([]); // 🆕 Locally filtered memories
+  const [allMemories, setAllMemories] = useState([]);
+  const [filteredMemories, setFilteredMemories] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [projectFilter, setProjectFilter] = useState('');
@@ -48,7 +48,7 @@ export default function DashboardPage() {
       setLoading(true);
       const memories = await fetchAllMemories(userId);
       setAllMemories(memories);
-      setFilteredMemories(memories); // Initially show all
+      setFilteredMemories(memories);
     } catch (err) {
       console.error('Failed to fetch memories:', err);
     } finally {
@@ -69,28 +69,25 @@ export default function DashboardPage() {
   const applyFilters = () => {
     let filtered = allMemories;
 
-    // Project filter
     if (projectFilter) {
       filtered = filtered.filter((mem) => (mem.project || '') === projectFilter);
     }
 
-    // Fixed filter
     if (fixedFilter) {
       const isFixed = fixedFilter === 'fixed';
       filtered = filtered.filter((mem) => mem.fixed_by_ai === isFixed);
     }
 
-    // Date filter
     if (dateFrom) {
       const from = new Date(dateFrom);
       filtered = filtered.filter((mem) => new Date(mem.timestamp) >= from);
     }
+
     if (dateTo) {
       const to = new Date(dateTo);
       filtered = filtered.filter((mem) => new Date(mem.timestamp) <= to);
     }
 
-    // Tag filter (substring match)
     if (tagFilter) {
       const tagLower = tagFilter.toLowerCase();
       filtered = filtered.filter((mem) =>
@@ -108,35 +105,7 @@ export default function DashboardPage() {
     setFixedFilter('');
     setTagFilter('');
     setQuery('');
-    setFilteredMemories(allMemories); // Reset to all memories
-  };
-
-  const handleTagChange = (e) => {
-    setTagFilter(e.target.value.toLowerCase());
-  };
-
-  const handleTagKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      applyFilters();
-    }
-  };
-
-  const handleProjectChange = (e) => {
-    setProjectFilter(e.target.value);
-    applyFilters();
-  };
-
-  const handleFixedFilterChange = (e) => {
-    setFixedFilter(e.target.value);
-  };
-
-  const handleDateFromChange = (e) => {
-    setDateFrom(e.target.value);
-  };
-
-  const handleDateToChange = (e) => {
-    setDateTo(e.target.value);
+    setFilteredMemories(allMemories);
   };
 
   useEffect(() => {
@@ -154,7 +123,7 @@ export default function DashboardPage() {
         <div className="flex flex-wrap gap-4 mb-6">
           <select
             value={projectFilter}
-            onChange={handleProjectChange}
+            onChange={(e) => setProjectFilter(e.target.value)}
             className="px-3 py-2 border rounded-md w-48 text-sm dark:bg-zinc-800 dark:border-zinc-700"
           >
             <option value="">All Projects</option>
@@ -168,20 +137,20 @@ export default function DashboardPage() {
           <input
             type="date"
             value={dateFrom}
-            onChange={handleDateFromChange}
+            onChange={(e) => setDateFrom(e.target.value)}
             className="px-3 py-2 border rounded-md text-sm dark:bg-zinc-800 dark:border-zinc-700"
           />
 
           <input
             type="date"
             value={dateTo}
-            onChange={handleDateToChange}
+            onChange={(e) => setDateTo(e.target.value)}
             className="px-3 py-2 border rounded-md text-sm dark:bg-zinc-800 dark:border-zinc-700"
           />
 
           <select
             value={fixedFilter}
-            onChange={handleFixedFilterChange}
+            onChange={(e) => setFixedFilter(e.target.value)}
             className="px-3 py-2 border rounded-md text-sm dark:bg-zinc-800 dark:border-zinc-700"
           >
             <option value="">All</option>
@@ -193,8 +162,7 @@ export default function DashboardPage() {
             type="text"
             placeholder="Filter by Tag"
             value={tagFilter}
-            onChange={handleTagChange}
-            onKeyDown={handleTagKeyDown}
+            onChange={(e) => setTagFilter(e.target.value)}
             className="px-3 py-2 border rounded-md text-sm dark:bg-zinc-800 dark:border-zinc-700"
           />
 
@@ -212,23 +180,22 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* Search Bar */}
         <SearchBar query={query} setQuery={setQuery} onSearch={applyFilters} />
       </div>
 
       {/* Results */}
       <div className="space-y-6">
-        {loading && (
-          <div className="text-center text-gray-400 dark:text-gray-500 my-8">
-            Loading memories...
+        {loading ? (
+          <div className="space-y-6">
+            {[...Array(3)].map((_, index) => (
+              <MemoryCard key={index} loading />
+            ))}
           </div>
-        )}
-        {!loading && filteredMemories.length === 0 && (
+        ) : filteredMemories.length === 0 ? (
           <div className="text-center text-gray-400 dark:text-gray-500 mt-10 text-sm">
             No memories found. Try a different search or filters.
           </div>
-        )}
-        {!loading && (
+        ) : (
           <AnimatePresence>
             {filteredMemories.map((entry) => (
               <motion.div

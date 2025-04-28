@@ -14,9 +14,8 @@ export default function ChatInterface() {
   const [session, setSession] = useState(null);
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState('');
-
-  const [tags, setTags] = useState([]);        // 🆕 added
-  const [tagInput, setTagInput] = useState(''); // 🆕 added
+  const [tags, setTags] = useState([]);
+  const [tagInput, setTagInput] = useState('');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -47,29 +46,21 @@ export default function ChatInterface() {
     setLoading(true);
     try {
       const prompt = input.trim();
-
-      const historyForAPI = messages
-        .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
+      const historyForAPI = messages.filter((msg) => msg.role === 'user' || msg.role === 'assistant')
         .map(({ role, content }) => ({ role, content }));
 
       const res = await chatWithGPT(prompt, session.user.id, historyForAPI, selectedProject);
       const reply = res.response;
       const pulledMemories = res.memories || [];
 
-      const updatedMessages = [
-        ...messages,
-        { role: 'user', content: prompt },
-      ];
-
+      const updatedMessages = [...messages, { role: 'user', content: prompt }];
       if (pulledMemories.length > 0) {
         updatedMessages.push({ role: 'context', content: pulledMemories.join('\n') });
       }
-
       updatedMessages.push({ role: 'assistant', content: reply });
 
       setMessages(updatedMessages);
       setInput('');
-
       setTimeout(() => {
         if (chatRef.current) {
           chatRef.current.scrollTo({ top: chatRef.current.scrollHeight, behavior: 'smooth' });
@@ -83,8 +74,7 @@ export default function ChatInterface() {
   };
 
   const handleSave = async (prompt, response) => {
-    const confirmSave = window.confirm("Save this Q&A to your memory?");
-    if (!confirmSave) return;
+    if (!window.confirm("Save this Q&A to your memory?")) return;
     try {
       await saveChatQA({
         user_id: session.user.id,
@@ -93,10 +83,10 @@ export default function ChatInterface() {
         project: selectedProject || '',
         filename: '',
         fixed_by_ai: true,
-        tags: tags.length > 0 ? tags : undefined, // 🆕 pass tags
+        tags: tags.length > 0 ? tags : undefined,
       });
       alert('✅ Q&A saved to memory!');
-      setTags([]); // Clear tags after saving
+      setTags([]);
     } catch (err) {
       console.error('Save failed:', err);
       alert('❌ Failed to save');
@@ -110,7 +100,6 @@ export default function ChatInterface() {
     }
   };
 
-  // 🆕 Handle Tags input
   const handleTagKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault();
@@ -130,9 +119,8 @@ export default function ChatInterface() {
 
   return (
     <div className="h-screen flex flex-col dark:bg-zinc-950 text-white">
-      {/* Sticky Header */}
+      {/* Top Bar */}
       <div className="sticky top-16 z-30 p-4 border-b border-zinc-800 text-black dark:text-white bg-zinc-50 dark:bg-zinc-950 shadow-md flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        {/* Left Side: Ask GPT + Project Selector */}
         <div className="flex flex-col">
           <div className="text-xl font-bold">💬 Ask GPT</div>
           <select
@@ -149,11 +137,9 @@ export default function ChatInterface() {
           </select>
         </div>
 
-        {/* Right Side: New Chat */}
         <button
           onClick={() => {
-            const confirmReset = window.confirm('Start a new chat? This will erase the current one.');
-            if (confirmReset) setMessages([]);
+            if (window.confirm('Start a new chat?')) setMessages([]);
           }}
           className="text-sm text-blue-500 hover:underline cursor-pointer"
         >
@@ -161,11 +147,8 @@ export default function ChatInterface() {
         </button>
       </div>
 
-      {/* Chat Messages */}
-      <div
-        ref={chatRef}
-        className="flex-1 overflow-y-auto px-6 py-4 space-y-6"
-      >
+      {/* Chat Area */}
+      <div ref={chatRef} className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
         {messages.map((msg, i) => (
           <div key={i} className="text-sm whitespace-pre-wrap break-words">
             {msg.role === 'context' ? (
@@ -195,14 +178,21 @@ export default function ChatInterface() {
             )}
           </div>
         ))}
+
+        {loading && (
+          <div className="animate-pulse space-y-2">
+            <div className="h-4 bg-gray-300 dark:bg-zinc-700 rounded w-24"></div>
+            <div className="h-3 bg-gray-300 dark:bg-zinc-700 rounded w-3/4"></div>
+            <div className="h-3 bg-gray-300 dark:bg-zinc-700 rounded w-2/3"></div>
+          </div>
+        )}
       </div>
 
-      {/* Fixed Input Footer */}
+      {/* Input Footer */}
       <div className="sticky bottom-0 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-800 px-4 py-3 space-y-3">
-
-        {/* 🆕 Tags Input */}
+        {/* Tags */}
         <div className="flex flex-col">
-          <label className="text-sm text-gray-800 dark:text-gray-100">Tags (optional, max 20 characters)</label>
+          <label className="text-sm text-gray-800 dark:text-gray-100">Tags (optional)</label>
           <input
             type="text"
             value={tagInput}
@@ -213,7 +203,7 @@ export default function ChatInterface() {
           />
           <div className="flex flex-wrap gap-2 mt-2">
             {tags.map((tag, index) => (
-              <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs flex items-center gap-1 dark:bg-blue-800 dark:text-white">
+              <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs dark:bg-blue-800 dark:text-white">
                 {tag}
                 <button onClick={() => handleRemoveTag(tag)} className="text-xs ml-1 cursor-pointer">❌</button>
               </span>
@@ -221,7 +211,7 @@ export default function ChatInterface() {
           </div>
         </div>
 
-        {/* Main Textarea */}
+        {/* Textarea */}
         <div className="flex flex-col gap-2">
           <textarea
             ref={textareaRef}
@@ -234,25 +224,22 @@ export default function ChatInterface() {
               setInput(e.target.value);
               if (textareaRef.current) {
                 textareaRef.current.style.height = 'auto';
-                const maxHeight = window.innerWidth < 768 ? 300 : 200;
-                const nextHeight = Math.min(textareaRef.current.scrollHeight, maxHeight);
+                const nextHeight = Math.min(textareaRef.current.scrollHeight, 300);
                 textareaRef.current.style.height = `${nextHeight}px`;
               }
             }}
             onKeyDown={handleKeyDown}
-            style={{ height: 'auto' }}
           />
           <div className="flex justify-end">
             <button
               onClick={handleSend}
               disabled={loading}
-              className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 cursor-pointer"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md"
             >
               {loading ? 'Thinking...' : 'Send'}
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );

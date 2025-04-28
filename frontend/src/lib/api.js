@@ -1,102 +1,79 @@
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+
+async function safeFetch(url, options) {
+  try {
+    const res = await fetch(url, options);
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('❌ API Error:', errorText);
+      throw new Error(errorText || 'API request failed');
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error('❌ Fetch failed:', error);
+    return { success: false, error: error.message || 'Unknown error' };
+  }
+}
+
 export async function searchMemory(filters) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/memory/search`, {
+  return safeFetch(`${BASE_URL}/api/memory/search`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(filters),
   });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch memory results");
-  }
-
-  return await res.json();
 }
 
 export async function chatWithGPT(prompt, userId, history, project = '') {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/gpt/chat`, {
+  return safeFetch(`${BASE_URL}/api/gpt/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt, history, project, user_id: userId }), // 🆕 add user_id
+    body: JSON.stringify({ prompt, history, project, user_id: userId }),
   });
-
-  if (!res.ok) {
-    const error = await res.text();
-    console.error('❌ GPT API Error:', error);
-    throw new Error('GPT chat failed');
-  }
-
-  return await res.json();
 }
 
-
 export async function saveChatQA(payload) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/memory/save-chat`, {
+  return safeFetch(`${BASE_URL}/api/memory/save-chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-
-  if (!res.ok) throw new Error('Save failed');
-  return await res.json();
 }
 
-
 export async function deleteMemory(memoryId, userId) {
-  const res = await fetch(`http://127.0.0.1:8000/api/memory/delete/${memoryId}/${userId}`, {
+  return safeFetch(`${BASE_URL}/api/memory/delete/${memoryId}/${userId}`, {
     method: 'DELETE',
   });
-
-  if (!res.ok) throw new Error('Failed to delete memory');
-  return await res.json();
 }
 
 export async function getMemoryGraph(userId) {
-  const res = await fetch(`http://127.0.0.1:8000/api/memory/graph/${userId}`);
-  if (!res.ok) throw new Error('Failed to load graph data');
-  return res.json();
+  return safeFetch(`${BASE_URL}/api/memory/graph/${userId}`);
 }
 
 export async function getWeeklyDigest(userId, selectedDate = null) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/digest/weekly`, {
+  return safeFetch(`${BASE_URL}/api/digest/weekly`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       user_id: userId,
-      selected_date: selectedDate ? selectedDate : undefined,
+      selected_date: selectedDate || undefined,
     }),
   });
-
-  if (!res.ok) {
-    throw new Error('Failed to fetch weekly digest');
-  }
-
-  return await res.json();
 }
 
 export async function saveMemory(payload) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/memory/add`, {
+  return safeFetch(`${BASE_URL}/api/memory/add`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-
-  if (!res.ok) {
-    throw new Error('Failed to upload memory');
-  }
-
-  return await res.json();
 }
 
 export async function fetchAllMemories(userId) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/memory/all/${userId}`);
-  if (!res.ok) {
-    throw new Error("Failed to fetch all memories");
-  }
-  return await res.json();
+  return safeFetch(`${BASE_URL}/api/memory/all/${userId}`);
 }
 
 export async function fetchProjects(userId) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/memory/projects/${userId}`);
-  if (!res.ok) throw new Error('Failed to fetch projects');
-  return await res.json();
+  return safeFetch(`${BASE_URL}/api/memory/projects/${userId}`);
 }

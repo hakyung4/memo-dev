@@ -26,11 +26,9 @@ export default function WeeklyDigestPage() {
       try {
         const today = new Date();
         const todayString = today.toISOString().split('T')[0];
-
-        // ✅ Always pass today's date explicitly
         const result = await getWeeklyDigest(data.session.user.id, todayString);
-        setDigest(result);
 
+        setDigest(result);
         setSelectedDate(todayString);
         setPendingDate(todayString);
       } catch (error) {
@@ -47,7 +45,6 @@ export default function WeeklyDigestPage() {
     if (!session?.user?.id) return;
     try {
       setLoading(true);
-
       const result = await getWeeklyDigest(session.user.id, date || undefined);
       setDigest(result);
     } catch (error) {
@@ -73,13 +70,7 @@ export default function WeeklyDigestPage() {
     fetchDigestForDate(todayString);
   };
 
-  if (loading) {
-    return (
-      <div className="p-6 text-center">
-        Loading your Weekly Digest...
-      </div>
-    );
-  }
+  if (!session) return null;
 
   return (
     <main className="min-h-screen bg-white dark:bg-black text-black dark:text-white flex flex-col">
@@ -111,7 +102,11 @@ export default function WeeklyDigestPage() {
 
       {/* Digest Content */}
       <div className="flex-1 flex flex-col gap-8 p-6 max-w-6xl mx-auto w-full">
-        {(!digest || digest.new_memory_count === 0) ? (
+        {loading ? (
+          [...Array(3)].map((_, idx) => (
+            <JournalEntryCard key={idx} loading />
+          ))
+        ) : (!digest || digest.new_memory_count === 0) ? (
           <EmptyState />
         ) : (
           <>

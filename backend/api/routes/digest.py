@@ -7,7 +7,7 @@ router = APIRouter()
 
 class DigestRequest(BaseModel):
     user_id: str
-    selected_date: date = None  # 🆕 optional selected date
+    selected_date: date = None
 
 @router.post("/weekly")
 def weekly_digest(req: DigestRequest):
@@ -15,4 +15,4 @@ def weekly_digest(req: DigestRequest):
         digest = get_weekly_digest(req.user_id, req.selected_date)
         return digest
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get weekly digest: {str(e)}")
+        raise HTTPException(status_code=500, detail={"error": f"Failed to get weekly digest: {str(e)}"})
