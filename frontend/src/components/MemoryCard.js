@@ -38,9 +38,10 @@ export default function MemoryCard({ entry, onDelete, loading }) {
         📁 {entry.project || 'No Project'} / {entry.filename || 'No Filename'}
       </div>
 
-      <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto max-h-48 dark:text-black">
-        {entry.text}
-      </pre>
+      <pre
+        className="bg-gray-100 p-2 rounded text-xs overflow-x-auto max-h-48 dark:text-black"
+        dangerouslySetInnerHTML={{ __html: entry.text }}
+      />
 
       {entry.tags && entry.tags.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
