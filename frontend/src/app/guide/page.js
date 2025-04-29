@@ -1,8 +1,15 @@
 'use client';
 
+import { motion } from 'framer-motion'; // 🆕 Import motion
+
 export default function GuidePage() {
   return (
-    <main className="min-h-screen px-6 py-12 bg-white dark:bg-black text-black dark:text-white">
+    <motion.main
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+      className="min-h-screen px-6 py-12 bg-white dark:bg-black text-black dark:text-white"
+    >
       <div className="max-w-4xl mx-auto space-y-12">
         <h1 className="text-4xl font-bold mb-8 text-center">🧠 Welcome to Memo.dev User Guide</h1>
 
@@ -91,8 +98,7 @@ export default function GuidePage() {
             <li>Weekly Digest is refreshed automatically every Monday!</li>
           </ul>
         </section>
-
       </div>
-    </main>
+    </motion.main>
   );
 }

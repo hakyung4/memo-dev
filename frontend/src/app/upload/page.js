@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { saveMemory } from '@/lib/api';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { motion } from 'framer-motion'; // 🆕 Import motion
 
 export default function UploadPage() {
   const [session, setSession] = useState(null);
@@ -47,7 +48,7 @@ export default function UploadPage() {
     const file = e.target.files[0];
     if (!file) return;
 
-    const maxSize = 1 * 1024 * 1024; // 1MB
+    const maxSize = 1 * 1024 * 1024;
     if (file.size > maxSize) {
       setError('File is too large. Maximum size is 1MB.');
       return;
@@ -63,7 +64,6 @@ export default function UploadPage() {
     const reader = new FileReader();
     reader.onload = (event) => {
       let fileContent = event.target.result;
-
       fileContent = fileContent
         .trim()
         .replace(/\r\n/g, '\n')
@@ -142,10 +142,14 @@ export default function UploadPage() {
   if (!session) return null;
 
   return (
-    <main className="p-6 space-y-8 flex flex-col items-center">
+    <motion.main
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+      className="p-6 space-y-8 flex flex-col items-center"
+    >
       <h1 className="text-3xl font-bold text-center">Upload a New Memory 📚</h1>
       <div className="w-full max-w-2xl space-y-6">
-
         {/* Project */}
         <div className="flex flex-col">
           <label className="mb-1 text-sm">Project (optional)</label>
@@ -268,7 +272,7 @@ export default function UploadPage() {
           </button>
         </div>
       </div>
-    </main>
+    </motion.main>
   );
 }
 

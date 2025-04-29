@@ -73,7 +73,12 @@ export default function WeeklyDigestPage() {
   if (!session) return null;
 
   return (
-    <main className="min-h-screen bg-white dark:bg-black text-black dark:text-white flex flex-col">
+    <motion.main
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+      className="min-h-screen bg-white dark:bg-black text-black dark:text-white flex flex-col"
+    >
       {/* Sticky Topbar */}
       <div className="sticky top-16 z-30 bg-white dark:bg-black py-4 md:px-10 border-b border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-wrap items-center justify-between px-6">
         <h1 className="text-2xl font-bold">Weekly Digest 📚</h1>
@@ -122,7 +127,7 @@ export default function WeeklyDigestPage() {
           </>
         )}
       </div>
-    </main>
+    </motion.main>
   );
 }
 
